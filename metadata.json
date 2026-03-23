@@ -1,0 +1,5 @@
+{
+  "name": "TF-IDF Business Insight Dashboard",
+  "description": "Comprehensive business analysis dashboard based on TF-IDF keyword scores for various products.",
+  "requestFramePermissions": []
+}
