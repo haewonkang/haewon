@@ -33,9 +33,13 @@ import {
   Smartphone,
   Cpu,
   ShoppingBag,
-  Package
+  Package,
+  Download,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { products, ProductData, KeywordData } from "./data";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -79,8 +83,8 @@ const getInsights = (productName: string) => {
   }
 };
 
-const GlassCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={cn(
+const GlassCard = ({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) => (
+  <div id={id} className={cn(
     "bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden",
     className
   )}>
@@ -90,10 +94,69 @@ const GlassCard = ({ children, className }: { children: React.ReactNode; classNa
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const totalPages = 20;
 
   const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 0));
+
+  const exportPDF = async () => {
+    setIsExporting(true);
+    setExportProgress(0);
+    
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'px',
+      format: [1280, 720]
+    });
+
+    const exportContainer = document.createElement('div');
+    exportContainer.style.position = 'fixed';
+    exportContainer.style.left = '-9999px';
+    exportContainer.style.top = '0';
+    exportContainer.style.width = '1280px';
+    exportContainer.style.height = '720px';
+    exportContainer.style.zIndex = '-1';
+    document.body.appendChild(exportContainer);
+
+    for (let i = 0; i < totalPages; i++) {
+      setExportProgress(i + 1);
+      
+      // We need to render the slide into the exportContainer
+      // Since renderSlide is a function that returns JSX, we can't easily "render" it to a DOM node without React.
+      // A better way is to use a hidden div in the main App component and capture it.
+      
+      // Let's use a different approach: temporarily change the current page and capture
+      const originalPage = currentPage;
+      setCurrentPage(i);
+      
+      // Wait for React to update and animations to finish
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      const slideElement = document.getElementById('slide-content');
+      if (slideElement) {
+        const canvas = await html2canvas(slideElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#050505',
+          logging: false,
+        });
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) pdf.addPage([1280, 720], 'landscape');
+        pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+      }
+      
+      if (i === totalPages - 1) {
+        setCurrentPage(originalPage);
+      }
+    }
+
+    pdf.save(`BizInsight_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    setIsExporting(false);
+    document.body.removeChild(exportContainer);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -491,7 +554,7 @@ export default function App() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="w-full h-full"
             >
-              <GlassCard className="w-full h-full relative">
+              <GlassCard id="slide-content" className="w-full h-full relative">
                 {renderSlide()}
               </GlassCard>
             </motion.div>
@@ -500,6 +563,23 @@ export default function App() {
 
         {/* Navigation Controls */}
         <div className="absolute bottom-20 right-20 flex gap-4 z-50">
+          <button 
+            onClick={exportPDF}
+            disabled={isExporting}
+            className="px-6 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition-colors disabled:opacity-50"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>{exportProgress}/{totalPages}</span>
+              </>
+            ) : (
+              <>
+                <Download size={20} />
+                <span>PDF</span>
+              </>
+            )}
+          </button>
           <button 
             onClick={prevPage}
             disabled={currentPage === 0}
@@ -517,16 +597,36 @@ export default function App() {
         </div>
 
         {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5">
-          <motion.div 
-            className="h-full bg-indigo-500"
-            initial={{ width: 0 }}
-            animate={{ width: `${((currentPage + 1) / totalPages) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5">
+        <motion.div 
+          className="h-full bg-indigo-500"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentPage + 1) / totalPages) * 100}%` }}
+          transition={{ duration: 0.3 }}
+        />
       </div>
+
+      {/* Export Overlay */}
+      {isExporting && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center space-y-6">
+          <div className="w-24 h-24 bg-indigo-500 rounded-3xl flex items-center justify-center animate-pulse">
+            <Download size={48} className="text-white" />
+          </div>
+          <div className="text-center">
+            <h3 className="text-2xl font-bold">PDF 생성 중...</h3>
+            <p className="text-white/40 mt-2">슬라이드를 캡처하고 있습니다 ({exportProgress} / {totalPages})</p>
+          </div>
+          <div className="w-64 h-2 bg-white/10 rounded-full overflow-hidden">
+            <motion.div 
+              className="h-full bg-indigo-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${(exportProgress / totalPages) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
