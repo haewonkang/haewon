@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -7,31 +7,33 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  AreaChart,
-  Area,
+  PieChart,
+  Pie,
+  Cell,
   Treemap,
 } from "recharts";
 import { 
-  Sun, 
-  Moon, 
+  ChevronLeft, 
+  ChevronRight, 
+  Presentation, 
   TrendingUp, 
-  Package, 
-  Truck, 
-  DollarSign, 
-  ThumbsUp, 
-  Zap,
-  LayoutDashboard,
-  BarChart3,
-  PieChart as PieChartIcon,
-  MessageSquare
+  Target, 
+  BarChart3, 
+  Lightbulb,
+  Search,
+  Layers,
+  CheckCircle2,
+  ArrowRight,
+  Monitor,
+  Smartphone,
+  Cpu,
+  ShoppingBag,
+  Package
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { products, ProductData, KeywordData } from "./data";
@@ -42,9 +44,9 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+const COLORS = ["#6366F1", "#8B5CF6", "#EC4899", "#F43F5E", "#F59E0B", "#10B981", "#06B6D4"];
 
-// Helper to categorize keywords for radar chart
+// Categorization logic for Radar
 const categorizeKeywords = (keywords: KeywordData[]) => {
   const categories = {
     "품질/성능": ["좋아요", "좋습니다", "좋고", "좋네요", "좋은", "만족합니다", "최고예요", "역시", "정말", "진짜", "제품", "두께도", "두껍고", "발림성", "촉촉하고", "음질", "노이즈캔슬링", "노캔"],
@@ -77,286 +79,453 @@ const getInsights = (productName: string) => {
   }
 };
 
-const ChartCard = ({ title, children, icon: Icon }: { title: string; children: React.ReactNode; icon: any }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow"
-  >
-    <div className="flex items-center gap-2 mb-6">
-      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
-        <Icon size={18} />
-      </div>
-      <h3 className="font-semibold text-zinc-800 dark:text-zinc-100">{title}</h3>
-    </div>
-    <div className="h-[250px] w-full">
-      {children}
-    </div>
-  </motion.div>
+const GlassCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={cn(
+    "bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden",
+    className
+  )}>
+    {children}
+  </div>
 );
 
 export default function App() {
-  const [isDark, setIsDark] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductData>(products[0]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = 20;
+
+  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 0));
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") nextPage();
+      if (e.key === "ArrowLeft") prevPage();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const renderSlide = () => {
+    const getProductIndex = (page: number) => {
+      if (page >= 4 && page <= 7) return 0;
+      if (page >= 8 && page <= 11) return 1;
+      if (page >= 12 && page <= 15) return 2;
+      if (page >= 16 && page <= 18) return 3;
+      return -1;
+    };
+
+    const productIdx = getProductIndex(currentPage);
+    const currentProduct = productIdx >= 0 ? products[productIdx] : null;
+
+    switch (currentPage) {
+      case 0: // Title Slide
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/40"
+            >
+              <Presentation size={48} className="text-white" />
+            </motion.div>
+            <div className="space-y-4">
+              <motion.h1 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60"
+              >
+                TF-IDF 기반<br />제품별 키워드 인사이트
+              </motion.h1>
+              <motion.p 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-xl text-white/40 font-medium"
+              >
+                종합 비즈니스 분석 및 전략 보고서
+              </motion.p>
+            </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="pt-12 flex items-center gap-2 text-white/30 text-sm font-bold tracking-widest uppercase"
+            >
+              <span>Strategy Planning Dept.</span>
+              <div className="w-1 h-1 bg-white/30 rounded-full" />
+              <span>2026 Q1 Report</span>
+            </motion.div>
+          </div>
+        );
+
+      case 1: // Executive Summary
+        return (
+          <div className="p-16 h-full flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-8">
+              <Target className="text-indigo-400" size={32} />
+              <h2 className="text-4xl font-bold">Executive Summary</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-8">
+              <GlassCard className="p-8 space-y-4">
+                <h3 className="text-xl font-bold text-indigo-300">분석 목적</h3>
+                <p className="text-white/70 leading-relaxed">
+                  본 보고서는 주요 이커머스 제품군의 소비자 리뷰 데이터를 TF-IDF 알고리즘으로 분석하여, 
+                  단순 빈도수를 넘어선 핵심 키워드의 가중치를 산출하고 이를 통한 시장 기회 요인을 도출하는 데 목적이 있습니다.
+                </p>
+              </GlassCard>
+              <GlassCard className="p-8 space-y-4">
+                <h3 className="text-xl font-bold text-purple-300">핵심 발견</h3>
+                <ul className="space-y-2 text-white/70">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={18} className="text-green-400 mt-1 shrink-0" />
+                    <span>건강기능식품: '지속성'과 '신뢰성'이 구매 결정의 핵심</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={18} className="text-green-400 mt-1 shrink-0" />
+                    <span>생활용품: '가성비'를 넘어선 '실질적 품질(두께 등)' 중시</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 size={18} className="text-green-400 mt-1 shrink-0" />
+                    <span>뷰티/IT: '기능적 우위'와 '브랜드 경험'의 결합</span>
+                  </li>
+                </ul>
+              </GlassCard>
+            </div>
+          </div>
+        );
+
+      case 2: // Methodology
+        return (
+          <div className="p-16 h-full flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-12">
+              <Search className="text-blue-400" size={32} />
+              <h2 className="text-4xl font-bold">Analysis Methodology</h2>
+            </div>
+            <div className="flex gap-12 items-center">
+              <div className="flex-1 space-y-8">
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-bold text-2xl text-blue-400 border border-white/10">1</div>
+                  <div>
+                    <h4 className="text-xl font-bold mb-2">Data Collection</h4>
+                    <p className="text-white/50">제품별 상위 1,000건 이상의 실제 구매 리뷰 데이터 수집 및 전처리</p>
+                  </div>
+                </div>
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-bold text-2xl text-purple-400 border border-white/10">2</div>
+                  <div>
+                    <h4 className="text-xl font-bold mb-2">TF-IDF Vectorization</h4>
+                    <p className="text-white/50">단어 빈도(TF)와 역문서 빈도(IDF)를 결합하여 특정 제품에서만 유독 강조되는 핵심 키워드 추출</p>
+                  </div>
+                </div>
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-bold text-2xl text-pink-400 border border-white/10">3</div>
+                  <div>
+                    <h4 className="text-xl font-bold mb-2">Insight Derivation</h4>
+                    <p className="text-white/50">추출된 키워드 가중치를 바탕으로 소비자 페르소나 분석 및 비즈니스 전략 수립</p>
+                  </div>
+                </div>
+              </div>
+              <div className="w-1/3">
+                <GlassCard className="p-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                  <div className="text-center space-y-4">
+                    <Cpu size={48} className="mx-auto text-white/80" />
+                    <div className="text-sm font-mono text-white/40">Algorithm Logic</div>
+                    <div className="text-2xl font-bold">W(d,t) = TF(d,t) * log(N/df(t))</div>
+                  </div>
+                </GlassCard>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3: // Overview of Products
+        return (
+          <div className="p-16 h-full">
+            <div className="flex items-center gap-3 mb-12">
+              <Layers className="text-pink-400" size={32} />
+              <h2 className="text-4xl font-bold">Target Products Overview</h2>
+            </div>
+            <div className="grid grid-cols-4 gap-6">
+              {products.map((p, i) => (
+                <motion.div 
+                  key={p.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <GlassCard className="p-6 h-full flex flex-col items-center text-center space-y-4 hover:bg-white/20 transition-colors cursor-default">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                      {i === 0 && <Smartphone className="text-blue-400" />}
+                      {i === 1 && <Package className="text-green-400" />}
+                      {i === 2 && <ShoppingBag className="text-pink-400" />}
+                      {i === 3 && <Monitor className="text-purple-400" />}
+                    </div>
+                    <h4 className="text-xl font-bold">{p.name}</h4>
+                    <p className="text-xs text-white/40 uppercase tracking-tighter">Category: {["Health", "Living", "Beauty", "Tech"][i]}</p>
+                  </GlassCard>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 19: // Conclusion
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center border border-white/10"
+            >
+              <CheckCircle2 size={64} className="text-green-400" />
+            </motion.div>
+            <h2 className="text-6xl font-black">Conclusion & Next Steps</h2>
+            <p className="text-xl text-white/50 max-w-2xl">
+              데이터 기반의 의사결정은 시장의 불확실성을 제거합니다. 
+              본 분석 결과를 바탕으로 각 제품군별 최적화된 마케팅 믹스 전략을 실행할 것을 권고합니다.
+            </p>
+            <div className="grid grid-cols-3 gap-4 w-full max-w-3xl pt-8">
+              <GlassCard className="p-4 text-sm font-bold text-white/60">정기 구독 모델 강화</GlassCard>
+              <GlassCard className="p-4 text-sm font-bold text-white/60">정품 인증 마케팅</GlassCard>
+              <GlassCard className="p-4 text-sm font-bold text-white/60">리뷰 기반 제품 개선</GlassCard>
+            </div>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(0)}
+              className="px-8 py-4 bg-white text-black font-bold rounded-2xl shadow-xl mt-8"
+            >
+              Restart Presentation
+            </motion.button>
+          </div>
+        );
+
+      default:
+        if (currentProduct) {
+          const slideInProduct = productIdx === 3 ? (currentPage - 16) % 3 : (currentPage - 4) % 4;
+          const top10 = currentProduct.keywords.slice(0, 10).filter(k => k.word !== "em" && k.word !== "br");
+          const radarData = categorizeKeywords(currentProduct.keywords);
+
+          if (slideInProduct === 0) { // Product Intro & Top Keywords
+            return (
+              <div className="p-16 h-full flex flex-col justify-center">
+                <div className="flex justify-between items-end mb-12">
+                  <div>
+                    <span className="text-indigo-400 font-bold uppercase tracking-widest text-sm">Product Analysis 0{productIdx + 1}</span>
+                    <h2 className="text-6xl font-black mt-2">{currentProduct.name}</h2>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-bold text-white/20">0{productIdx + 1} / 04</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="col-span-1">
+                    <GlassCard className="p-8 h-full">
+                      <h4 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <TrendingUp size={20} className="text-indigo-400" />
+                        Top 5 Keywords
+                      </h4>
+                      <div className="space-y-4">
+                        {top10.slice(0, 5).map((k, i) => (
+                          <div key={k.word} className="flex items-center justify-between">
+                            <span className="text-white/60 font-medium">{i + 1}. {k.word}</span>
+                            <span className="text-indigo-300 font-mono text-sm">{k.score.toFixed(1)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </GlassCard>
+                  </div>
+                  <div className="col-span-2">
+                    <GlassCard className="p-8 h-full bg-indigo-500/10">
+                      <h4 className="text-xl font-bold mb-4">분석 요약</h4>
+                      <p className="text-white/70 leading-relaxed">
+                        {currentProduct.name} 제품군은 소비자 리뷰에서 품질에 대한 높은 만족도와 더불어 특정 기능적 요소가 구매 결정의 핵심으로 작용하고 있습니다. 
+                        TF-IDF 가중치 분석 결과, 일반적인 긍정 표현 외에도 제품 고유의 특성을 나타내는 단어들이 상위권에 포진되어 있습니다.
+                      </p>
+                    </GlassCard>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (slideInProduct === 1) { // Keyword Score Analysis
+            return (
+              <div className="p-16 h-full flex flex-col">
+                <h2 className="text-4xl font-bold mb-12 flex items-center gap-3">
+                  <BarChart3 className="text-blue-400" />
+                  Keyword Score Distribution
+                </h2>
+                <div className="flex-1">
+                  <GlassCard className="p-8 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={top10} margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="word" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 14 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                          itemStyle={{ color: '#818cf8' }}
+                        />
+                        <Bar dataKey="score" fill="url(#barGradient)" radius={[6, 6, 0, 0]}>
+                          <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#818cf8" stopOpacity={1} />
+                              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.6} />
+                            </linearGradient>
+                          </defs>
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </GlassCard>
+                </div>
+              </div>
+            );
+          }
+
+          if (slideInProduct === 2 || (productIdx === 3 && slideInProduct === 2)) { // Category Radar or Combined Insights
+            if (productIdx === 3 && slideInProduct === 2) {
+              // Special case for last product to fit 20 slides
+              return (
+                <div className="p-16 h-full flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Lightbulb className="text-amber-400" size={32} />
+                    <h2 className="text-4xl font-bold">Strategic Insights</h2>
+                  </div>
+                  <GlassCard className="p-12 bg-gradient-to-br from-indigo-600/20 to-purple-600/20">
+                    <p className="text-2xl leading-relaxed text-white/90 font-medium whitespace-pre-wrap">
+                      {getInsights(currentProduct.name)}
+                    </p>
+                  </GlassCard>
+                </div>
+              );
+            }
+            return (
+              <div className="p-16 h-full flex flex-col">
+                <h2 className="text-4xl font-bold mb-12 flex items-center gap-3">
+                  <Target className="text-purple-400" />
+                  Category Impact Analysis
+                </h2>
+                <div className="flex-1 flex gap-8">
+                  <div className="w-1/2">
+                    <GlassCard className="p-8 h-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                          <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                          <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 500]} tick={false} axisLine={false} />
+                          <Radar
+                            name="Score"
+                            dataKey="A"
+                            stroke="#a78bfa"
+                            fill="#a78bfa"
+                            fillOpacity={0.5}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </GlassCard>
+                  </div>
+                  <div className="w-1/2 space-y-6">
+                    <GlassCard className="p-6">
+                      <h4 className="font-bold text-purple-300 mb-2">품질/성능 집중도</h4>
+                      <p className="text-sm text-white/60">해당 제품은 품질 관련 키워드에서 가장 높은 밀도를 보이며, 이는 브랜드 신뢰도의 핵심 자산입니다.</p>
+                    </GlassCard>
+                    <GlassCard className="p-6">
+                      <h4 className="font-bold text-blue-300 mb-2">서비스 경험 지수</h4>
+                      <p className="text-sm text-white/60">배송 및 고객 응대에 대한 긍정적 키워드가 꾸준히 노출되어 전체적인 구매 여정의 만족도가 높습니다.</p>
+                    </GlassCard>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (slideInProduct === 3) { // Detailed Insights
+            return (
+              <div className="p-16 h-full flex flex-col justify-center">
+                <div className="flex items-center gap-3 mb-8">
+                  <Lightbulb className="text-amber-400" size={32} />
+                  <h2 className="text-4xl font-bold">Business Insights</h2>
+                </div>
+                <GlassCard className="p-12 bg-gradient-to-br from-indigo-600/20 to-purple-600/20">
+                  <p className="text-2xl leading-relaxed text-white/90 font-medium whitespace-pre-wrap">
+                    {getInsights(currentProduct.name)}
+                  </p>
+                </GlassCard>
+              </div>
+            );
+          }
+        }
+        return null;
     }
-  }, [isDark]);
-
-  const top10Keywords = useMemo(() => 
-    selectedProduct.keywords.slice(0, 10).filter(k => k.word !== "em" && k.word !== "br"), 
-    [selectedProduct]
-  );
-
-  const radarData = useMemo(() => categorizeKeywords(selectedProduct.keywords), [selectedProduct]);
-
-  const distributionData = useMemo(() => 
-    selectedProduct.keywords.slice(0, 5).map((k, i) => ({ name: k.word, value: k.score })),
-    [selectedProduct]
-  );
-
-  const cumulativeData = useMemo(() => {
-    let sum = 0;
-    return selectedProduct.keywords.slice(0, 15).map(k => {
-      sum += k.score;
-      return { name: k.word, cumulative: sum };
-    });
-  }, [selectedProduct]);
-
-  const treemapData = useMemo(() => ({
-    name: "Keywords",
-    children: selectedProduct.keywords.slice(0, 20).map(k => ({ name: k.word, size: k.score }))
-  }), [selectedProduct]);
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-bottom border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-              <LayoutDashboard size={24} />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg leading-tight">BizInsight</h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium uppercase tracking-wider">TF-IDF Analysis</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#050505] text-white font-sans overflow-hidden relative">
+      {/* Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 blur-[120px] rounded-full" />
+      <div className="absolute top-[20%] right-[10%] w-[20%] h-[20%] bg-pink-600/10 blur-[100px] rounded-full" />
 
+      {/* Main Presentation Area */}
+      <div className="relative z-10 w-full h-screen flex flex-col">
+        <header className="px-12 py-8 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-black font-black">B</div>
+            <span className="font-bold tracking-tighter text-xl">BizInsight</span>
+          </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsDark(!isDark)}
-              className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Product Selector */}
-        <div className="flex flex-wrap gap-2 mb-10">
-          {products.map((product) => (
-            <button
-              key={product.name}
-              onClick={() => setSelectedProduct(product)}
-              className={cn(
-                "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 border",
-                selectedProduct.name === product.name
-                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
-                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500"
-              )}
-            >
-              {product.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Insights & Summary */}
-          <div className="lg:col-span-1 space-y-8">
-            <motion.div 
-              key={selectedProduct.name + "insight"}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-3xl text-white shadow-xl"
-            >
-              <div className="flex items-center gap-2 mb-4 opacity-80">
-                <TrendingUp size={18} />
-                <span className="text-xs font-bold uppercase tracking-widest">Business Insight</span>
-              </div>
-              <h2 className="text-3xl font-bold mb-6">{selectedProduct.name} 분석</h2>
-              <p className="text-blue-50 leading-relaxed text-sm whitespace-pre-wrap">
-                {getInsights(selectedProduct.name)}
-              </p>
-            </motion.div>
-
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-              <h3 className="font-bold mb-4 flex items-center gap-2">
-                <Zap size={18} className="text-amber-500" />
-                핵심 키워드 Top 5
-              </h3>
-              <div className="space-y-3">
-                {top10Keywords.slice(0, 5).map((k, i) => (
-                  <div key={k.word} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-zinc-400 w-4">{i + 1}</span>
-                      <span className="font-medium group-hover:text-blue-500 transition-colors">{k.word}</span>
-                    </div>
-                    <span className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-zinc-500">
-                      {k.score.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-mono text-white/40">
+              PAGE {currentPage + 1} / {totalPages}
             </div>
           </div>
+        </header>
 
-          {/* Right Column: Charts Grid */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ChartCard title="상위 키워드 점수 분석" icon={BarChart3}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={top10Keywords} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={isDark ? "#333" : "#eee"} />
-                  <XAxis type="number" hide />
-                  <YAxis 
-                    dataKey="word" 
-                    type="category" 
-                    width={80} 
-                    tick={{ fontSize: 12, fill: isDark ? "#999" : "#666" }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", border: "none", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                    itemStyle={{ color: "#3B82F6" }}
-                  />
-                  <Bar dataKey="score" fill="#3B82F6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+        <main className="flex-1 px-12 pb-12 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full h-full"
+            >
+              <GlassCard className="w-full h-full relative">
+                {renderSlide()}
+              </GlassCard>
+            </motion.div>
+          </AnimatePresence>
+        </main>
 
-            <ChartCard title="카테고리별 영향력 (Radar)" icon={TrendingUp}>
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid stroke={isDark ? "#333" : "#eee"} />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: isDark ? "#999" : "#666" }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 500]} tick={false} />
-                  <Radar
-                    name="Score"
-                    dataKey="A"
-                    stroke="#3B82F6"
-                    fill="#3B82F6"
-                    fillOpacity={0.5}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="주요 키워드 비중 (Pie)" icon={PieChartIcon}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={distributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {distributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", border: "none", borderRadius: "8px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="누적 키워드 영향력 추이" icon={TrendingUp}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={cumulativeData}>
-                  <defs>
-                    <linearGradient id="colorCum" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#333" : "#eee"} />
-                  <XAxis dataKey="name" hide />
-                  <YAxis tick={{ fontSize: 10, fill: isDark ? "#999" : "#666" }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", border: "none", borderRadius: "8px" }}
-                  />
-                  <Area type="monotone" dataKey="cumulative" stroke="#3B82F6" fillOpacity={1} fill="url(#colorCum)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="키워드 중요도 트리맵" icon={LayoutDashboard}>
-              <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={treemapData.children}
-                  dataKey="size"
-                  aspectRatio={4 / 3}
-                  stroke="#fff"
-                  fill="#3B82F6"
-                >
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", border: "none", borderRadius: "8px" }}
-                  />
-                </Treemap>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="고객 만족도 시그널" icon={ThumbsUp}>
-              <div className="flex flex-col items-center justify-center h-full space-y-4">
-                <div className="flex gap-2">
-                  {["좋아요", "만족합니다", "감사합니다", "좋네요"].map((word) => {
-                    const score = selectedProduct.keywords.find(k => k.word === word)?.score || 0;
-                    const intensity = Math.min(score / 100, 1);
-                    return (
-                      <div 
-                        key={word}
-                        className="flex flex-col items-center"
-                        style={{ opacity: 0.3 + intensity * 0.7 }}
-                      >
-                        <div className="w-12 bg-blue-500 rounded-t-lg" style={{ height: `${intensity * 100}px` }} />
-                        <span className="text-[10px] mt-2 font-medium">{word}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-zinc-500 text-center px-4">
-                  긍정 키워드의 TF-IDF 점수를 기반으로 한 브랜드 선호도 시각화
-                </p>
-              </div>
-            </ChartCard>
-          </div>
+        {/* Navigation Controls */}
+        <div className="absolute bottom-20 right-20 flex gap-4 z-50">
+          <button 
+            onClick={prevPage}
+            disabled={currentPage === 0}
+            className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button 
+            onClick={nextPage}
+            disabled={currentPage === totalPages - 1}
+            className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          >
+            <ChevronRight size={24} />
+          </button>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="flex justify-center gap-6 mb-6 text-zinc-400">
-            <Package size={20} />
-            <Truck size={20} />
-            <DollarSign size={20} />
-            <MessageSquare size={20} />
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            &copy; 2026 BizInsight Dashboard. All data based on TF-IDF keyword analysis.
-          </p>
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5">
+          <motion.div 
+            className="h-full bg-indigo-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentPage + 1) / totalPages) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
